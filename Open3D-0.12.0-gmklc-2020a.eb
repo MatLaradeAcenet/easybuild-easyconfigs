@@ -1,0 +1,76 @@
+easyblock = "CMakeMake"
+
+name = "Open3D"
+version = "0.12.0"
+
+homepage = "http://www.open3d.org/"
+description = """Open3D is an open-source library that supports rapid development
+of software that deals with 3D data. The Open3D frontend exposes a set of carefully
+selected data structures and algorithms in both C++ and Python. The backend is highly
+optimized and is set up for parallelization."""
+
+toolchain = {"name": "gmklc", "version": "2020a"}
+toolchainopts = {"cstd": "c++17"}
+
+# Fetching from Github to obtain build data which is not part of released tarball
+sources = [{
+    'filename': 'v%(version)s.tar.gz',
+    'git_config': {
+        'url': 'https://github.com/intel-isl',
+        'repo_name': 'Open3D',
+        'tag': 'v%(version)s',
+        'recursive': True,
+        'keep_git_dir': False,
+    },
+}]
+# Must use --disable-enforce-checksums as checksums are not reliable on a JIT created tarball
+
+#source_urls = ['https://github.com/intel-isl/Open3D/archive/']
+#sources = ['v%(version)s.tar.gz']
+
+builddependencies = [('CMake', '3.18.4')]
+
+multi_deps_load_default = False
+multi_deps = {"Python": ["3.6", "3.7", "3.8"]}
+
+# don't use the GLIBCXX11 ABI
+use_glibcxx11_abi = False
+
+local_cmake_opts = " ".join([
+    #"-DGLIBCXX_USE_CXX11_ABI=OFF",
+    "-DWITH_OPENMP=ON",
+    #"-DENABLE_HEADLESS_RENDERING=ON",
+    #"-DBUILD_GUI=OFF", # Not compatible with headless rendering
+    #"-DUSE_SYSTEM_GLEW=OFF", # Force build included glew and glfw to get right version
+    #"-DUSE_SYSTEM_GLFW=OFF",
+    "-DBUILD_CUDA_MODULE=ON", # Enable CUDA
+    "-DBUILD_PYTORCH_OPS=ON",
+    "-DBUILD_TENSORFLOW_OPS=ON",
+    "-DBUNDLE_OPEN3D_ML=ON", # Enable Python ML module
+    "-DOPEN3D_ML_ROOT=https://github.com/intel-isl/Open3D-ML.git",
+    "-DCMAKE_INSTALL_PREFIX=%(installdir)s",
+])
+
+local_exports = " && ".join([
+    'export OPEN3D_CMAKE_OPTIONS="{}"'.format(local_cmake_opts),
+    "export OPEN3D_HOME=%(installdir)s",
+    "export PYTHONPATH=%(installdir)s/lib/python%(pyshortver)s/site-packages:$PYTHONPATH",
+])
+
+configopts = local_cmake_opts
+
+install_cmd = " && ".join([
+    "make install", # Install C++ library
+    "make python-package", # Install Python package
+])
+
+separate_build_dir = True
+
+sanity_check_paths = {
+    'files': [''],
+    'dirs': [''],
+}
+
+sanity_check_commands = [
+    "python -c 'import open3d'"
+]

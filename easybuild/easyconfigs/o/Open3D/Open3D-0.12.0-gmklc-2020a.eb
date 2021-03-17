@@ -25,22 +25,25 @@ sources = [{
 }]
 # Must use --disable-enforce-checksums as checksums are not reliable on a JIT created tarball
 
-#source_urls = ['https://github.com/intel-isl/Open3D/archive/']
-#sources = ['v%(version)s.tar.gz']
-
 builddependencies = [('CMake', '3.18.4')]
+
 
 multi_deps_load_default = False
 multi_deps = {"Python": ["3.6", "3.7", "3.8"]}
 
-# don't use the GLIBCXX11 ABI
-use_glibcxx11_abi = False
+configure_cmd = " && ".join([
+    "virtualenv --no-download %(builddir)s/venv",
+    "source %(builddir)s/venv/bin/activate",
+    "pip install --no-index tensorflow_cpu",
+    "pip install --no-index torch",
+    "deactivate",
+    "cmake",
+])
 
 local_cmake_opts = " ".join([
-    #"-DGLIBCXX_USE_CXX11_ABI=OFF",
-    "-DWITH_OPENMP=ON",
+    "-WITH_OPENMP=ON",
     #"-DENABLE_HEADLESS_RENDERING=ON",
-    #"-DBUILD_GUI=OFF", # Not compatible with headless rendering
+    "-DBUILD_GUI=OFF", # Not compatible with headless rendering
     #"-DUSE_SYSTEM_GLEW=OFF", # Force build included glew and glfw to get right version
     #"-DUSE_SYSTEM_GLFW=OFF",
     "-DBUILD_CUDA_MODULE=ON", # Enable CUDA
@@ -48,6 +51,7 @@ local_cmake_opts = " ".join([
     "-DBUILD_TENSORFLOW_OPS=ON",
     "-DBUNDLE_OPEN3D_ML=ON", # Enable Python ML module
     "-DOPEN3D_ML_ROOT=https://github.com/intel-isl/Open3D-ML.git",
+    "-DPYTHON_EXECUTABLE=%(builddir)s/venv/bin/python",
     "-DCMAKE_INSTALL_PREFIX=%(installdir)s",
 ])
 

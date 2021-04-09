@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 preconfigopts = 'CC=mpicc FC=mpif90'
-configopts = " --enable-fortran"
+configopts = "--disable-shared --enable-fortran"
 
 sanity_check_paths = {
     'files': ['lib/libpiof.a', 'include/pio.mod'],
